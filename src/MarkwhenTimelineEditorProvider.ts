@@ -129,7 +129,7 @@ export class MarkwhenTimelineEditorProvider
     // @ts-ignore
     this.lpc = await useLpc(getPanel().webview, {
       markwhenState: async (event) => {
-        const rawText = this.document?.getText() || "";
+        const rawText = await this.getCombinedText();
         const parsed = await parse(rawText);
         return {
           rawText,
@@ -179,6 +179,37 @@ export class MarkwhenTimelineEditorProvider
     });
   }
 
+  private async getCombinedText(): Promise<string> {
+    if (!this.document) {
+      return "";
+    }
+    let rawText = this.document.getText();
+    if (this.document.uri.path.endsWith("_calendar.mw")) {
+      try {
+        const dir = vscode.Uri.joinPath(this.document.uri, "..");
+        const files = await vscode.workspace.fs.readDirectory(dir);
+        const mwFiles = files.filter(
+          ([name, type]) =>
+            name.endsWith(".mw") &&
+            name !== "_calendar.mw" &&
+            type === vscode.FileType.File
+        );
+        const dec = new TextDecoder();
+        const contents = await Promise.all(
+          mwFiles.map(async ([name]) => {
+            const fileUri = vscode.Uri.joinPath(dir, name);
+            const content = await vscode.workspace.fs.readFile(fileUri);
+            return dec.decode(content);
+          })
+        );
+        rawText += "\n" + contents.join("\n");
+      } catch (e) {
+        console.error("Error reading sibling files", e);
+      }
+    }
+    return rawText;
+  }
+
   onDocumentChange(event: vscode.TextDocumentChangeEvent) {
     if (!this.document) {
       throw new Error("No document");
@@ -189,7 +220,7 @@ export class MarkwhenTimelineEditorProvider
   }
 
   async parse() {
-    const rawText = this.document?.getText() ?? "";
+    const rawText = await this.getCombinedText();
     // console.log(rawText)
     const parsed = await parse(rawText);
     this.parseResult = {
