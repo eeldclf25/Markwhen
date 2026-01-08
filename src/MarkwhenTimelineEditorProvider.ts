@@ -21,10 +21,9 @@ const getPanel = () => {
 
 export class MarkwhenTimelineEditorProvider
   implements
-    vscode.CustomTextEditorProvider,
-    vscode.HoverProvider,
-    vscode.FoldingRangeProvider
-{
+  vscode.CustomTextEditorProvider,
+  vscode.HoverProvider,
+  vscode.FoldingRangeProvider {
   document?: vscode.TextDocument;
   lpc?: ReturnType<typeof useLpc>;
   parseResult?: {
@@ -58,7 +57,7 @@ export class MarkwhenTimelineEditorProvider
 
   private static readonly viewType = "markwhen.timeline";
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly context: vscode.ExtensionContext) { }
 
   async provideFoldingRanges(
     document: vscode.TextDocument,
@@ -183,31 +182,24 @@ export class MarkwhenTimelineEditorProvider
     if (!this.document) {
       return "";
     }
-    let rawText = this.document.getText();
-    if (this.document.uri.path.endsWith("_calendar.mw")) {
-      try {
-        const dir = vscode.Uri.joinPath(this.document.uri, "..");
-        const files = await vscode.workspace.fs.readDirectory(dir);
-        const mwFiles = files.filter(
-          ([name, type]) =>
-            name.endsWith(".mw") &&
-            name !== "_calendar.mw" &&
-            type === vscode.FileType.File
-        );
-        const dec = new TextDecoder();
-        const contents = await Promise.all(
-          mwFiles.map(async ([name]) => {
-            const fileUri = vscode.Uri.joinPath(dir, name);
-            const content = await vscode.workspace.fs.readFile(fileUri);
-            return dec.decode(content);
-          })
-        );
-        rawText += "\n" + contents.join("\n");
-      } catch (e) {
-        console.error("Error reading sibling files", e);
-      }
+    else if (
+      this.document.uri.scheme === "markwhen" &&
+      this.document.uri.path.endsWith("Daily Calendar.mw")
+    ) {
+      const dailyNotesDirectory = `${vscode.workspace.getConfiguration("markwhen").get<string>("dailyNotesDirectory")}/*.md`;
+      const files = await vscode.workspace.findFiles(dailyNotesDirectory);
+      const dec = new TextDecoder();
+      const contents = await Promise.all(
+        files.map(async (fileUri) => {
+          const content = await vscode.workspace.fs.readFile(fileUri);
+          return dec.decode(content);
+        })
+      );
+      return contents.join("\n");
     }
-    return rawText;
+    else {
+      return this.document.getText();
+    }
   }
 
   onDocumentChange(event: vscode.TextDocumentChangeEvent) {

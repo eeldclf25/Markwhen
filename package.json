@@ -1,6 +1,6 @@
 {
   "name": "markwhen",
-  "displayName": "Markwhen",
+  "displayName": "Markwhen-fork",
   "description": "Visualize and edit markwhen documents",
   "version": "1.4.4",
   "repository": {
@@ -125,7 +125,40 @@
           "*.mw"
         ]
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "markwhen-dailyCalendar",
+          "title": "Daily Calendar",
+          "icon": "icons/calendar.svg"
+        }
+      ]
+    },
+    "views": {
+      "markwhen-dailyCalendar": [
+        {
+          "id": "markwhen.dailyCalendar",
+          "name": "Daily Calendar"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "markwhen.dailyCalendar",
+        "contents": "[데일리 캘린더 열기](command:markwhen.openDailyCalendar)\n[(Foam)데일리 노트 만들기](command:foam-vscode.open-daily-note-for-date)\n"
+      }
+    ],
+    "configuration": {
+      "title": "Markwhen",
+      "properties": {
+        "markwhen.dailyNotesDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "The path to the folder containing daily notes."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",

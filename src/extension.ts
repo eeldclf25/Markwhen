@@ -59,9 +59,21 @@ export function activate(context: vscode.ExtensionContext) {
       }
       await editor.setView("calendar");
       editor.postState()
+    }),
+    vscode.workspace.registerTextDocumentContentProvider("markwhen", {
+      provideTextDocumentContent: () => "",
+    }),
+    vscode.commands.registerCommand("markwhen.openDailyCalendar", async () => {
+      const uri = vscode.Uri.parse("markwhen://calendar/Daily Calendar.mw");
+      await vscode.commands.executeCommand(
+        "vscode.openWith",
+        uri,
+        "markwhen.timeline",
+        vscode.ViewColumn.Two
+      );
     })
   );
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
